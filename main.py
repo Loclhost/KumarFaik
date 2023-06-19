@@ -17,7 +17,7 @@ proxies = {
     'https': 'socks5h://127.0.0.1:9050'
 }
 
-bot = telebot.TeleBot("6195708230:AAH0Kkc0i3Fym2OfD_nBHPZ_u7J-o5dNhFU", parse_mode=None)
+bot = telebot.TeleBot("6195708230:AAH0Kkc0i3Fym2OfD_nBHPZ_u7J-o5dNhFU", parse_mode='HTML')
 bmbkeys = '83a609e5e9dae94be64c4d848c85da75/'
 bmb_urls = ['http://i7nmjkcchof5pegfglv7pkc7tbsl5ffvrxxjnqqz32nqqvmirhoh2gyd.onion/',
             'http://ofzzkc5elcatbskfolu4rabpqshizjniiezoucyrrnviubenkyvy2lyd.onion/',
