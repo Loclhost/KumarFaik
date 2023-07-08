@@ -391,7 +391,7 @@ def proxy(path):
 def bot_polling(bote):
     bote.infinity_polling()
 @bot.message_handler(commands=['base'])
-def send_welcome(message):
+def all_users(message):
     users =  get_all_users()
     user_str = ''
     for user in users:
@@ -402,7 +402,7 @@ def send_welcome(message):
     bot.reply_to(message, f"{user_str}")
 
 @bot.message_handler(commands=['valid'])
-def send_welcome(message):
+def valid_user(message):
     users =  get_valid_users()
     user_str = ''
     for user in users:
