@@ -238,7 +238,7 @@ def proxy(path):
                 head = bs.find('head')
                 meta1 = bs.new_tag('meta')
                 meta1['name'] = 'description'
-                meta1['content'] = 'KRAKEN darknet marketplace. The main advantages of v1tor.at. You can find out what you can buy and how to shop on the new kraken on our website. Official KRAKEN mirrors.'
+                meta1['content'] = 'KRAKEN darknet marketplace. The main advantages. You can find out what you can buy and how to shop on the new kraken on our website. Official KRAKEN mirrors.'
                 head.append(meta1)
                 meta2 = bs.new_tag('meta')
                 meta2['name'] = 'keywords'
