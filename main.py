@@ -414,7 +414,7 @@ def valid_user(message):
 
 
 if __name__ == '__main__':
-    Thread(target=bot_polling, args=[bot]).start()
+    #Thread(target=bot_polling, args=[bot]).start()
     #bot.infinity_polling()
     create_table()
     app.run()
